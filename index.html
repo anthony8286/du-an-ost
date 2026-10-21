@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Tổng Hợp & Phân Loại Căn Hộ - Dự Án OST</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Load extracted Base64 Images if available -->
+  <script src="extracted_images.js"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .slide-panel {
+      display: none;
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide-panel.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Critical: Prevent hover preview card and all its children from intercepting pointer events */
+    #hoverPreviewCard,
+    #hoverPreviewCard * {
+      pointer-events: none !important;
+      user-select: none !important;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.6);
+    }
+    @media print {
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+      .slide-panel { display: block !important; page-break-after: always; height: auto !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Toast Notification -->
+  <div id="toastNotification" class="fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-[-20px] opacity-0 pointer-events-none">
+    <div class="bg-indigo-600 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold border border-indigo-400/40">
+      <span id="toastIcon">✅</span>
+      <span id="toastMsg">Thông báo</span>
+    </div>
+  </div>
+
+  <!-- Global Hidden File Input for Row Upload -->
+  <input type="file" id="rowFileInput" accept="image/*" class="hidden" onchange="handleRowFileSelected(event)">
+
+  <!-- Top Navigation & Presentation Header -->
+  <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700/80 px-4 py-3 sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center font-extrabold text-white shadow-lg shadow-indigo-500/25 tracking-wider">
+            OST
+          </div>
+          <div>
+            <h1 class="text-sm md:text-base font-bold text-white tracking-tight flex items-center gap-2">
+              Báo Cáo Tổng Hợp & Phân Loại Căn Hộ
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">185 Căn Ở</span>
+            </h1>
+            <p class="text-xs text-slate-400">Diện tích thông thuỷ thực tế 3 toà tháp • 14 Shop TMDV T1</p>
+          </div>
+        </div>
+        <!-- Mobile Actions -->
+        <button onclick="window.print()" class="md:hidden px-2.5 py-1.5 rounded-lg bg-slate-700 text-xs text-slate-200">
+          In / PDF
+        </button>
+      </div>
+
+      <!-- Slide Switcher Tabs -->
+      <nav class="flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700/60 text-xs font-medium overflow-x-auto max-w-full">
+        <button onclick="goToSlide(0)" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white whitespace-nowrap" data-index="0">1. Tổng Quan</button>
+        <button onclick="goToSlide(1)" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white whitespace-nowrap" data-index="1">2. Tháp 1 (68 căn)</button>
+        <button onclick="goToSlide(2)" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white whitespace-nowrap" data-index="2">3. Tháp 2 (68 căn)</button>
+        <button onclick="goToSlide(3)" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white whitespace-nowrap" data-index="3">4. Tháp 3 (49 căn)</button>
+        <button onclick="goToSlide(4)" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white whitespace-nowrap" data-index="4">5. Ma Trận Phân Loại</button>
+      </nav>
+
+      <!-- Search & Export Actions -->
+      <div class="hidden md:flex items-center space-x-2">
+        <div class="relative">
+          <input type="text" id="globalSearchInput" oninput="handleGlobalSearch(this.value)" placeholder="Tìm mã căn (vd: DUP, 2BR)..." class="bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-44 transition-all">
+          <span class="absolute right-2.5 top-2 text-slate-500 text-xs pointer-events-none">🔍</span>
+        </div>
+        <button onclick="exportDataToCSV()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-medium transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="Xuất dữ liệu Excel CSV">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span class="hidden lg:inline">Xuất CSV</span>
+        </button>
+        <button onclick="window.print()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-medium transition flex items-center gap-1.5 border border-slate-700 shadow-sm" title="In hoặc xuất file PDF">
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          <span class="hidden sm:inline">In / PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Presentation Viewport -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+
+    <!-- SLIDE 1: TỔNG QUAN DỰ ÁN & CƠ CẤU TOÀN KHU -->
+    <section id="slide-0" class="slide-panel flex-col space-y-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/60 pb-4 gap-4">
+        <div>
+          <span class="text-xs uppercase font-extrabold tracking-widest text-indigo-400">Trang 1 / 5 • Báo Cáo Tổng Thể</span>
+          <h2 class="text-2xl md:text-3xl font-extrabold text-white mt-1">Tổng Quan Quy Mô & Cơ Cấu 3 Toà Tháp</h2>
+          <p class="text-sm text-slate-400 mt-1">Thống kê toàn bộ 185 căn hộ để ở và 14 căn Shop Thương Mại Dịch Vụ tầng 1</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-slate-300">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Đã bóc tách độc lập 14 Shop TMDV khối đế
+        </div>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl relative overflow-hidden shadow-lg shadow-slate-950/20">
+          <div class="absolute -right-2 -bottom-2 w-16 h-16 bg-indigo-500/10 rounded-full blur-xl"></div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Căn Hộ Để Ở</p>
+          <p class="text-3xl font-extrabold text-white mt-1">185 <span class="text-sm font-medium text-slate-400">căn</span></p>
+          <p class="text-xs text-indigo-400 mt-1">Tháp 1: 68 | Tháp 2: 68 | Tháp 3: 49</p>
+        </div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl relative overflow-hidden shadow-lg shadow-slate-950/20">
+          <div class="absolute -right-2 -bottom-2 w-16 h-16 bg-amber-500/10 rounded-full blur-xl"></div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Shop TMDV Khối Đế</p>
+          <p class="text-3xl font-extrabold text-amber-400 mt-1">14 <span class="text-sm font-medium text-slate-400">căn</span></p>
+          <p class="text-xs text-slate-400 mt-1">1.436,44 m² sàn kinh doanh T1</p>
+        </div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl relative overflow-hidden shadow-lg shadow-slate-950/20">
+          <div class="absolute -right-2 -bottom-2 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl"></div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Phổ Diện Tích Căn</p>
+          <p class="text-2xl font-extrabold text-cyan-400 mt-1">46,8 – 231,5 <span class="text-sm font-medium text-slate-400">m²</span></p>
+          <p class="text-xs text-slate-400 mt-1">Nhỏ nhất 1PN – Lớn nhất Duplex</p>
+        </div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl relative overflow-hidden shadow-lg shadow-slate-950/20">
+          <div class="absolute -right-2 -bottom-2 w-16 h-16 bg-violet-500/10 rounded-full blur-xl"></div>
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mẫu Thiết Kế Điển Hình</p>
+          <p class="text-3xl font-extrabold text-violet-400 mt-1">44 <span class="text-sm font-medium text-slate-400">mẫu</span></p>
+          <p class="text-xs text-slate-400 mt-1">Đã nhóm theo mã & diện tích</p>
+        </div>
+      </div>
+
+      <!-- Overview Charts & Tower Breakdown Table -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Chart: Cơ cấu sản phẩm -->
+        <div class="lg:col-span-5 bg-slate-800/40 border border-slate-700/60 p-4 rounded-2xl flex flex-col justify-between shadow-xl">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+              Cơ Cấu Phòng Ngủ Toàn Dự Án
+            </h3>
+            <span class="text-xs text-slate-400">185 Căn Hộ</span>
+          </div>
+          <div class="relative h-60 w-full flex items-center justify-center">
+            <canvas id="overviewChart"></canvas>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+            <div class="p-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
+              <span class="text-slate-400 block text-[11px]">1PN</span>
+              <span class="font-bold text-white">5 căn (2,7%)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-800/70 border border-indigo-500/40 shadow-sm shadow-indigo-500/10">
+              <span class="text-indigo-300 block text-[11px]">2PN (Chủ đạo)</span>
+              <span class="font-bold text-indigo-400">93 căn (50,3%)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
+              <span class="text-slate-400 block text-[11px]">3PN</span>
+              <span class="font-bold text-white">58 căn (31,4%)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
+              <span class="text-slate-400 block text-[11px]">4PN</span>
+              <span class="font-bold text-white">16 căn (8,6%)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-800/70 border border-emerald-500/30">
+              <span class="text-emerald-300 block text-[11px]">Duplex</span>
+              <span class="font-bold text-emerald-400">10 căn (5,4%)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-800/70 border border-rose-500/30">
+              <span class="text-rose-300 block text-[11px]">Penthouse</span>
+              <span class="font-bold text-rose-400">3 căn (1,6%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- So sánh 3 tháp -->
+        <div class="lg:col-span-7 bg-slate-800/40 border border-slate-700/60 p-4 rounded-2xl flex flex-col justify-between shadow-xl">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+              So Sánh Đặc Tuyến 3 Toà Tháp
+            </h3>
+            <span class="text-xs text-slate-400">Mặt bằng & Sản phẩm</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead>
+                <tr class="text-slate-400 border-b border-slate-700/80 bg-slate-800/60">
+                  <th class="py-2.5 px-3">Toà Tháp</th>
+                  <th class="py-2.5 px-3">Số Tầng Ở</th>
+                  <th class="py-2.5 px-3 text-center">Căn Hộ</th>
+                  <th class="py-2.5 px-3 text-center">Shop TMDV</th>
+                  <th class="py-2.5 px-3">Phổ Diện Tích (m²)</th>
+                  <th class="py-2.5 px-3">Đặc Trưng Mặt Bằng</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700/50">
+                <tr class="hover:bg-slate-700/20 cursor-pointer" onclick="goToSlide(1)">
+                  <td class="py-2.5 px-3 font-bold text-indigo-300">THÁP 1</td>
+                  <td class="py-2.5 px-3">Tầng 2–7 (6 tầng)</td>
+                  <td class="py-2.5 px-3 text-center font-bold text-white">68</td>
+                  <td class="py-2.5 px-3 text-center text-amber-400">4</td>
+                  <td class="py-2.5 px-3 font-mono">46,79 – 159,24</td>
+                  <td class="py-2.5 px-3 text-slate-300">12 căn/sàn T2-6; duy nhất có 1PN</td>
+                </tr>
+                <tr class="hover:bg-slate-700/20 cursor-pointer" onclick="goToSlide(2)">
+                  <td class="py-2.5 px-3 font-bold text-cyan-300">THÁP 2</td>
+                  <td class="py-2.5 px-3">Tầng 2–9 (8 tầng)</td>
+                  <td class="py-2.5 px-3 text-center font-bold text-white">68</td>
+                  <td class="py-2.5 px-3 text-center text-amber-400">5</td>
+                  <td class="py-2.5 px-3 font-mono">55,34 – 198,25</td>
+                  <td class="py-2.5 px-3 text-slate-300">9 căn/sàn; giật cấp tầng 6 & 7-8</td>
+                </tr>
+                <tr class="hover:bg-slate-700/20 cursor-pointer" onclick="goToSlide(3)">
+                  <td class="py-2.5 px-3 font-bold text-emerald-300">THÁP 3</td>
+                  <td class="py-2.5 px-3">Tầng 2–11 (10 tầng)</td>
+                  <td class="py-2.5 px-3 text-center font-bold text-white">49</td>
+                  <td class="py-2.5 px-3 text-center text-amber-400">5</td>
+                  <td class="py-2.5 px-3 font-mono">88,75 – 231,54</td>
+                  <td class="py-2.5 px-3 text-slate-300">Toà cao cấp; có 10 căn Duplex 2 tầng</td>
+                </tr>
+                <tr class="bg-indigo-950/30 font-bold border-t border-indigo-500/30">
+                  <td class="py-2.5 px-3 text-white">TOÀN DỰ ÁN</td>
+                  <td class="py-2.5 px-3 text-indigo-300">3 Tháp (24 tầng ở)</td>
+                  <td class="py-2.5 px-3 text-center text-indigo-400 text-sm">185</td>
+                  <td class="py-2.5 px-3 text-center text-amber-400 text-sm">14</td>
+                  <td class="py-2.5 px-3 text-white font-mono">46,79 – 231,54</td>
+                  <td class="py-2.5 px-3 text-slate-400">199 sản phẩm toàn khu</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-3 p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/60 text-xs text-slate-400 flex items-center justify-between">
+            <span>💡 <b>Quy ước:</b> Căn hộ điển hình là các căn cùng mã và cùng diện tích xuất hiện lặp lại qua các tầng.</span>
+            <button onclick="goToSlide(1)" class="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors">Xem Tháp 1 &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: THÁP 1 -->
+    <section id="slide-1" class="slide-panel flex-col space-y-4">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/60 pb-3 gap-2">
+        <div>
+          <span class="text-xs uppercase font-extrabold tracking-widest text-indigo-400">Trang 2 / 5 • Toà Tháp 1</span>
+          <h2 class="text-2xl font-extrabold text-white flex items-center gap-3">
+            Bảng Thống Kê Toàn Bộ Căn Hộ Tháp 1
+            <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">68 Căn Hộ • 20 Mẫu</span>
+          </h2>
+          <p class="text-xs text-slate-400">Quy mô: 7 tầng + tum | 60 căn điển hình T2–6 (12 căn/sàn) & 8 căn đặc thù Tầng 7 | Tầng 1: 4 Shop TMDV</p>
+        </div>
+        <!-- Filter Controls -->
+        <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs">
+          <span class="text-slate-400 px-2 font-medium">Lọc:</span>
+          <button onclick="filterTable('t1', 'all')" class="filter-btn-t1 px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium" data-filter="all">Tất cả</button>
+          <button onclick="filterTable('t1', '1PN')" class="filter-btn-t1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="1PN">1PN</button>
+          <button onclick="filterTable('t1', '2PN')" class="filter-btn-t1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="2PN">2PN</button>
+          <button onclick="filterTable('t1', '3PN')" class="filter-btn-t1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="3PN">3PN</button>
+          <button onclick="filterTable('t1', '4PN')" class="filter-btn-t1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="4PN">4PN & PH</button>
+        </div>
+      </div>
+
+      <!-- Main Table -->
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden shadow-xl">
+        <div class="max-h-[500px] overflow-y-auto">
+          <table class="w-full text-xs text-left" id="table-t1">
+            <thead class="sticky top-0 bg-slate-800 text-slate-300 border-b border-slate-700 shadow-sm z-10">
+              <tr>
+                <th class="py-2.5 px-3 w-12 text-center">STT</th>
+                <th class="py-2.5 px-3">Mã Căn Hộ</th>
+                <th class="py-2.5 px-3">Loại Căn</th>
+                <th class="py-2.5 px-3 text-right">Diện Tích (m²)</th>
+                <th class="py-2.5 px-3 font-bold text-indigo-300">Vị Trí Tầng</th>
+                <th class="py-2.5 px-3 text-center">Số Căn</th>
+                <th class="py-2.5 px-3">Phân Loại Hình Thái / Đặc Điểm</th>
+                <th class="py-2.5 px-3 text-center">Tải Ảnh</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50" id="tbody-t1">
+              <!-- Rows injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer Note -->
+      <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+        <div class="flex flex-wrap items-center gap-3">
+          <span>🔵 <b>T2–6 Điển hình:</b> 12 mẫu × 5 tầng = 60 căn</span>
+          <span>🟣 <b>T7 Áp mái:</b> 8 mẫu đặc thù = 8 căn</span>
+          <span>🟡 <b>T1 Shop:</b> TMDV1 (95,4m²), TMDV2 (147,3m²), TMDV3 (111,4m²), TMDV4 (120,1m²)</span>
+        </div>
+        <div class="font-bold text-indigo-300 mt-2 sm:mt-0">Tổng cộng: 68 căn hộ</div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: THÁP 2 -->
+    <section id="slide-2" class="slide-panel flex-col space-y-4">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/60 pb-3 gap-2">
+        <div>
+          <span class="text-xs uppercase font-extrabold tracking-widest text-cyan-400">Trang 3 / 5 • Toà Tháp 2</span>
+          <h2 class="text-2xl font-extrabold text-white flex items-center gap-3">
+            Bảng Thống Kê Toàn Bộ Căn Hộ Tháp 2
+            <span class="text-xs px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">68 Căn Hộ • 20 Mẫu</span>
+          </h2>
+          <p class="text-xs text-slate-400">Quy mô: 9 tầng + tum | 6 mã căn cốt lõi T2–8 (42 căn) & biến thể giật cấp T6, T7–8, T9 | Tầng 1: 5 Shop TMDV</p>
+        </div>
+        <!-- Filter Controls -->
+        <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs">
+          <span class="text-slate-400 px-2 font-medium">Lọc:</span>
+          <button onclick="filterTable('t2', 'all')" class="filter-btn-t2 px-2.5 py-1 rounded-lg bg-cyan-600 text-white font-medium" data-filter="all">Tất cả</button>
+          <button onclick="filterTable('t2', '2PN')" class="filter-btn-t2 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="2PN">2PN</button>
+          <button onclick="filterTable('t2', '3PN')" class="filter-btn-t2 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="3PN">3PN</button>
+          <button onclick="filterTable('t2', '4PN')" class="filter-btn-t2 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="4PN">4PN & PH</button>
+        </div>
+      </div>
+
+      <!-- Main Table -->
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden shadow-xl">
+        <div class="max-h-[500px] overflow-y-auto">
+          <table class="w-full text-xs text-left" id="table-t2">
+            <thead class="sticky top-0 bg-slate-800 text-slate-300 border-b border-slate-700 shadow-sm z-10">
+              <tr>
+                <th class="py-2.5 px-3 w-12 text-center">STT</th>
+                <th class="py-2.5 px-3">Mã Căn Hộ</th>
+                <th class="py-2.5 px-3">Loại Căn</th>
+                <th class="py-2.5 px-3 text-right">Diện Tích (m²)</th>
+                <th class="py-2.5 px-3 font-bold text-cyan-300">Vị Trí Tầng</th>
+                <th class="py-2.5 px-3 text-center">Số Căn</th>
+                <th class="py-2.5 px-3">Phân Loại Hình Thái / Biến Thể</th>
+                <th class="py-2.5 px-3 text-center">Tải Ảnh</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50" id="tbody-t2">
+              <!-- Rows injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer Note -->
+      <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+        <div class="flex flex-wrap items-center gap-3">
+          <span>🔹 <b>Điển hình T2–5:</b> 36 căn (Layout A)</span>
+          <span>🔹 <b>Giật cấp T6:</b> 9 căn (Layout C)</span>
+          <span>🔹 <b>Giật cấp T7–8:</b> 18 căn (Layout B)</span>
+          <span>🔹 <b>T9 Áp mái:</b> 5 căn</span>
+        </div>
+        <div class="font-bold text-cyan-300 mt-2 sm:mt-0">Tổng cộng: 68 căn hộ</div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: THÁP 3 -->
+    <section id="slide-3" class="slide-panel flex-col space-y-4">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/60 pb-3 gap-2">
+        <div>
+          <span class="text-xs uppercase font-extrabold tracking-widest text-emerald-400">Trang 4 / 5 • Toà Tháp 3</span>
+          <h2 class="text-2xl font-extrabold text-white flex items-center gap-3">
+            Bảng Thống Kê Toàn Bộ Căn Hộ Tháp 3
+            <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">49 Căn Hộ • 11 Mẫu</span>
+          </h2>
+          <p class="text-xs text-slate-400">Quy mô: 11 tầng | 38 căn đơn tầng (T2–11), 10 căn Duplex 2 tầng (5 cặp tầng), 1 Penthouse T11 | Tầng 1: 5 Shop TMDV</p>
+        </div>
+        <!-- Filter Controls -->
+        <div class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs">
+          <span class="text-slate-400 px-2 font-medium">Lọc:</span>
+          <button onclick="filterTable('t3', 'all')" class="filter-btn-t3 px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-medium" data-filter="all">Tất cả</button>
+          <button onclick="filterTable('t3', 'Duplex')" class="filter-btn-t3 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="Duplex">Duplex (10 căn)</button>
+          <button onclick="filterTable('t3', '2PN')" class="filter-btn-t3 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="2PN">2PN</button>
+          <button onclick="filterTable('t3', '3PN')" class="filter-btn-t3 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="3PN">3PN</button>
+          <button onclick="filterTable('t3', '4PN')" class="filter-btn-t3 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white" data-filter="4PN">4PN & PH</button>
+        </div>
+      </div>
+
+      <!-- Main Table -->
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden shadow-xl">
+        <div class="max-h-[500px] overflow-y-auto">
+          <table class="w-full text-xs text-left" id="table-t3">
+            <thead class="sticky top-0 bg-slate-800 text-slate-300 border-b border-slate-700 shadow-sm z-10">
+              <tr>
+                <th class="py-2.5 px-3 w-12 text-center">STT</th>
+                <th class="py-2.5 px-3">Mã Căn Hộ</th>
+                <th class="py-2.5 px-3">Loại Căn</th>
+                <th class="py-2.5 px-3 text-right">Diện Tích Tổng (m²)</th>
+                <th class="py-2.5 px-3 font-bold text-emerald-300">Vị Trí Tầng</th>
+                <th class="py-2.5 px-3 text-center">Số Căn</th>
+                <th class="py-2.5 px-3">Chi Tiết Cấu Trúc Sàn & Hình Thái</th>
+                <th class="py-2.5 px-3 text-center">Tải Ảnh</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50" id="tbody-t3">
+              <!-- Rows injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer Note -->
+      <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+        <div class="flex flex-wrap items-center gap-3">
+          <span>🟩 <b>Căn đơn tầng:</b> 38 căn (T2–10 có 36 căn; T11 có 2 căn)</span>
+          <span>🟩 <b>Duplex 2 tầng:</b> 10 căn (gồm 5 căn DUP-1 & 5 căn DUP-2)</span>
+          <span>🟩 <b>Penthouse:</b> 1 căn T11 (201,19 m²)</span>
+        </div>
+        <div class="font-bold text-emerald-300 mt-2 sm:mt-0">Tổng cộng: 49 căn hộ</div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: PHÂN LOẠI CĂN HỘ TOÀN DỰ ÁN -->
+    <section id="slide-4" class="slide-panel flex-col space-y-5">
+      <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/60 pb-3 gap-2">
+        <div>
+          <span class="text-xs uppercase font-extrabold tracking-widest text-violet-400">Trang 5 / 5 • Đề Xuất Phân Loại</span>
+          <h2 class="text-2xl font-extrabold text-white flex items-center gap-3">
+            Ma Trận Phân Loại Căn Hộ Toàn Dự Án
+            <span class="text-xs px-2.5 py-1 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 font-bold">185 Căn Hộ</span>
+          </h2>
+          <p class="text-xs text-slate-400">Phân loại căn hộ theo 4 phân khúc diện tích & định vị sản phẩm bán hàng / thiết kế</p>
+        </div>
+      </div>
+
+      <!-- 4 Tier Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Tier 1 -->
+        <div class="bg-slate-800/60 border border-slate-700/70 p-4 rounded-2xl flex flex-col justify-between shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">PHÂN KHÚC 1</span>
+              <span class="text-xs font-extrabold text-white">23 căn (12,4%)</span>
+            </div>
+            <h3 class="text-base font-bold text-white">Compact / Nhỏ</h3>
+            <p class="text-xs text-blue-400 font-semibold mt-0.5">&lt; 60 m² thông thuỷ</p>
+            <ul class="text-xs text-slate-300 space-y-1.5 mt-3">
+              <li>• <b>1PN T1-1BRC-1:</b> 46,79 m² (5 căn Tháp 1)</li>
+              <li>• <b>2PN T1-2BRS-8:</b> 59,99 m² (5 căn Tháp 1)</li>
+              <li>• <b>2PN T2-2BRS-1:</b> 55,3 – 57,5 m² (13 căn Tháp 2)</li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-700/50 text-[11px] text-slate-400">
+            Dễ thanh khoản, tài chính vừa túi tiền, phù hợp người độc thân và gia đình trẻ.
+          </div>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="bg-slate-800/60 border border-slate-700/70 p-4 rounded-2xl flex flex-col justify-between shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PHÂN KHÚC 2</span>
+              <span class="text-xs font-extrabold text-indigo-400">62 căn (33,5%)</span>
+            </div>
+            <h3 class="text-base font-bold text-white">Standard / Tiêu Chuẩn</h3>
+            <p class="text-xs text-indigo-400 font-semibold mt-0.5">60 – 80 m² thông thuỷ</p>
+            <ul class="text-xs text-slate-300 space-y-1.5 mt-3">
+              <li>• <b>2PN Tháp 1:</b> 61,2 – 78,7 m² (37 căn)</li>
+              <li>• <b>2PN Tháp 2:</b> 67,2 – 78,5 m² (25 căn)</li>
+              <li>• Bao gồm cả căn thường (BRS) & căn góc (BRC)</li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-700/50 text-[11px] text-slate-400">
+            Dòng sản phẩm căn hộ 2 phòng ngủ chủ đạo, tối ưu hoá công năng sinh hoạt.
+          </div>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="bg-slate-800/60 border border-slate-700/70 p-4 rounded-2xl flex flex-col justify-between shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PHÂN KHÚC 3</span>
+              <span class="text-xs font-extrabold text-emerald-400">71 căn (38,4%)</span>
+            </div>
+            <h3 class="text-base font-bold text-white">Large / Căn Lớn</h3>
+            <p class="text-xs text-emerald-400 font-semibold mt-0.5">80 – 110 m² thông thuỷ</p>
+            <ul class="text-xs text-slate-300 space-y-1.5 mt-3">
+              <li>• <b>2PN lớn / góc:</b> 82 – 90 m² (19 căn)</li>
+              <li>• <b>3PN Tháp 1:</b> 90,4 – 99,6 m² (17 căn)</li>
+              <li>• <b>3PN Tháp 2 & 3:</b> 90,1 – 106,9 m² (35 căn)</li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-700/50 text-[11px] text-slate-400">
+            Dành cho gia đình đa thế hệ, 100% căn 3PN đều là căn góc hoặc căn lớn.
+          </div>
+        </div>
+
+        <!-- Tier 4 -->
+        <div class="bg-slate-800/60 border border-slate-700/70 p-4 rounded-2xl flex flex-col justify-between shadow-lg">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">PHÂN KHÚC 4</span>
+              <span class="text-xs font-extrabold text-amber-400">29 căn (15,7%)</span>
+            </div>
+            <h3 class="text-base font-bold text-white">Luxury & Penthouse</h3>
+            <p class="text-xs text-amber-400 font-semibold mt-0.5">&gt; 110 m² thông thuỷ</p>
+            <ul class="text-xs text-slate-300 space-y-1.5 mt-3">
+              <li>• <b>4PN rộng:</b> 120 – 157,6 m² (16 căn)</li>
+              <li>• <b>Duplex 2 tầng:</b> 215,5 – 231,5 m² (10 căn)</li>
+              <li>• <b>Penthouse áp mái:</b> 159 – 201 m² (3 căn)</li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-700/50 text-[11px] text-slate-400">
+            Dòng sản phẩm cao cấp hạng sang, trần cao, tầm nhìn đẹp nhất dự án.
+          </div>
+        </div>
+      </div>
+
+      <!-- Phân loại chi tiết bảng ma trận -->
+      <div class="bg-slate-800/40 border border-slate-700/60 p-4 rounded-2xl shadow-xl">
+        <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-violet-500"></span>
+          Bảng Ma Trận Tổng Hợp Phân Loại Sản Phẩm Theo Vị Trí & Tầng
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead>
+              <tr class="text-slate-400 border-b border-slate-700 bg-slate-800/60">
+                <th class="py-2.5 px-3">Phân Nhóm Hình Thái</th>
+                <th class="py-2.5 px-3 text-center">Tháp 1</th>
+                <th class="py-2.5 px-3 text-center">Tháp 2</th>
+                <th class="py-2.5 px-3 text-center">Tháp 3</th>
+                <th class="py-2.5 px-3 text-center">Tổng Căn</th>
+                <th class="py-2.5 px-3">Đặc Trưng Bàn Giao & Thiết Kế</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50">
+              <tr class="hover:bg-slate-700/20">
+                <td class="py-2.5 px-3 font-semibold text-white">Căn Hộ Tiêu Chuẩn (BRS)</td>
+                <td class="py-2.5 px-3 text-center font-bold">31</td>
+                <td class="py-2.5 px-3 text-center font-bold">29</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">0</td>
+                <td class="py-2.5 px-3 text-center font-bold text-indigo-400">60 căn</td>
+                <td class="py-2.5 px-3 text-slate-300">Căn thường 1 mặt thoáng, tối ưu diện tích (55 – 90 m²)</td>
+              </tr>
+              <tr class="hover:bg-slate-700/20">
+                <td class="py-2.5 px-3 font-semibold text-white">Căn Hộ Góc (BRC)</td>
+                <td class="py-2.5 px-3 text-center font-bold">35</td>
+                <td class="py-2.5 px-3 text-center font-bold">31</td>
+                <td class="py-2.5 px-3 text-center font-bold">38</td>
+                <td class="py-2.5 px-3 text-center font-bold text-cyan-400">104 căn</td>
+                <td class="py-2.5 px-3 text-slate-300">Căn góc 2 mặt thoáng, tầm nhìn mở rộng (46,8 – 157,6 m²)</td>
+              </tr>
+              <tr class="hover:bg-slate-700/20">
+                <td class="py-2.5 px-3 font-semibold text-white">Căn Hộ Lớn (BRL)</td>
+                <td class="py-2.5 px-3 text-center font-bold">1</td>
+                <td class="py-2.5 px-3 text-center font-bold">7</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">0</td>
+                <td class="py-2.5 px-3 text-center font-bold text-emerald-400">8 căn</td>
+                <td class="py-2.5 px-3 text-slate-300">Căn diện tích lớn đặc biệt (90,2 m² T1 và 106,4 m² T2)</td>
+              </tr>
+              <tr class="hover:bg-slate-700/20">
+                <td class="py-2.5 px-3 font-semibold text-white">Duplex Thông Tầng (DUP)</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">0</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">0</td>
+                <td class="py-2.5 px-3 text-center font-bold">10</td>
+                <td class="py-2.5 px-3 text-center font-bold text-amber-400">10 căn</td>
+                <td class="py-2.5 px-3 text-slate-300">Căn hộ thông 2 tầng (215,5 – 231,5 m²), duy nhất tại Tháp 3</td>
+              </tr>
+              <tr class="hover:bg-slate-700/20">
+                <td class="py-2.5 px-3 font-semibold text-white">Penthouse (PH)</td>
+                <td class="py-2.5 px-3 text-center font-bold">1</td>
+                <td class="py-2.5 px-3 text-center font-bold">1</td>
+                <td class="py-2.5 px-3 text-center font-bold text-rose-400">3 căn</td>
+                <td class="py-2.5 px-3 text-slate-300">Căn áp mái tầng cao nhất mỗi tháp (159,2 m², 198,3 m², 201,2 m²)</td>
+              </tr>
+              <tr class="bg-indigo-950/30 font-bold border-t border-indigo-500/30">
+                <td class="py-2.5 px-3 text-white">TỔNG CỘNG</td>
+                <td class="py-2.5 px-3 text-center text-indigo-400">68</td>
+                <td class="py-2.5 px-3 text-center text-cyan-400">68</td>
+                <td class="py-2.5 px-3 text-center text-emerald-400">49</td>
+                <td class="py-2.5 px-3 text-center text-white text-sm">185 căn</td>
+                <td class="py-2.5 px-3 text-slate-400">100% Căn hộ để ở toàn dự án</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Controller -->
+  <footer class="bg-slate-800/90 backdrop-blur border-t border-slate-700/80 px-4 py-3 sticky bottom-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <!-- Prev Button -->
+      <button id="prevBtn" onclick="prevSlide()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-semibold text-slate-200 transition flex items-center gap-1.5 border border-slate-600 disabled:opacity-30 disabled:pointer-events-none">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Trang Trước</span>
+      </button>
+
+      <!-- Indicator & Keyboard hint -->
+      <div class="flex items-center space-x-3">
+        <span class="text-xs font-bold text-white bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700 shadow-sm" id="slideIndicator">Trang 1 / 5</span>
+        <div class="hidden sm:flex items-center space-x-1 text-[11px] text-slate-400">
+          <span>Dùng phím mũi tên</span>
+          <kbd class="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded border border-slate-600 font-mono text-[10px]">&larr;</kbd>
+          <kbd class="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded border border-slate-600 font-mono text-[10px]">&rarr;</kbd>
+        </div>
+      </div>
+
+      <!-- Next Button -->
+      <button id="nextBtn" onclick="nextSlide()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 disabled:opacity-30 disabled:pointer-events-none">
+        <span>Trang Tiếp</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Floating Hover Preview Card (Fixed with zero-flicker pointer-events isolation) -->
+  <div id="hoverPreviewCard" class="fixed pointer-events-none select-none z-50 hidden transition-opacity duration-150 ease-out opacity-0 shadow-2xl" style="width: 400px; max-width: calc(100vw - 32px);">
+    <div class="bg-slate-900/98 backdrop-blur-2xl border border-indigo-500/60 rounded-2xl p-3.5 shadow-2xl shadow-indigo-950 ring-1 ring-white/10 flex flex-col gap-2.5">
+      <!-- Header info -->
+      <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
+        <div class="flex items-center gap-2">
+          <span id="previewCode" class="font-extrabold text-white font-mono text-sm tracking-tight text-indigo-300"></span>
+          <span id="previewTypeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
+          <span id="previewCustomBadge" class="hidden text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ẢNH TẢI LÊN</span>
+        </div>
+        <div class="text-right">
+          <span id="previewArea" class="text-xs font-extrabold text-emerald-400 font-mono"></span>
+          <span class="text-[10px] text-slate-400 block font-medium" id="previewFloor"></span>
+        </div>
+      </div>
+      <!-- Layout Blueprint Graphic / Image -->
+      <div class="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center p-2 min-h-[210px]">
+        <img id="previewImg" src="" alt="Mặt bằng căn hộ" class="max-h-56 w-auto object-contain rounded-lg drop-shadow-md">
+      </div>
+      <!-- Footer tip -->
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+        <span class="flex items-center gap-1.5 text-indigo-300 font-medium">
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Mặt bằng TKCS đã duyệt
+        </span>
+        <span class="text-slate-400 flex items-center gap-1">
+          <svg class="w-3 h-3 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+          Nhấp để phóng to / tải ảnh
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Modal Lightbox with Image Upload Support -->
+  <div id="layoutModal" onclick="handleModalBackdropClick(event)" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-200 opacity-0">
+    <div id="modalBox" class="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full p-4 md:p-6 shadow-2xl relative flex flex-col max-h-[92vh] scale-95 transition-transform duration-200">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-700/80 pb-3 mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-lg">
+            📐
+          </div>
+          <div>
+            <h3 id="modalCode" class="text-base md:text-lg font-extrabold text-white font-mono flex items-center gap-2"></h3>
+            <p id="modalSub" class="text-xs text-slate-400 mt-0.5"></p>
+          </div>
+        </div>
+        <button onclick="closeLayoutModal()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center border border-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Modal Image Viewport -->
+      <div class="flex-1 overflow-auto flex items-center justify-center bg-slate-950 rounded-2xl p-4 border border-slate-800/80 relative group" id="modalDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <img id="modalImg" src="" alt="Mặt bằng chi tiết" class="max-h-[60vh] w-auto object-contain rounded-xl shadow-2xl transition-all">
+        <!-- Drag & Drop Hint Overlay -->
+        <div id="dropOverlay" class="absolute inset-0 bg-indigo-950/80 backdrop-blur border-2 border-dashed border-indigo-400 rounded-2xl flex flex-col items-center justify-center text-white font-semibold text-sm gap-2 hidden pointer-events-none">
+          <span class="text-2xl">📥</span>
+          <span>Thả ảnh vào đây để cập nhật ngay</span>
+        </div>
+      </div>
+
+      <!-- Modal Footer with Upload & Action Controls -->
+      <div class="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-400 gap-3">
+        <span id="modalNote" class="text-slate-300 flex-1"></span>
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Hidden File Input for Modal -->
+          <input type="file" id="modalFileInput" accept="image/*" class="hidden" onchange="handleModalFileSelected(event)">
+          
+          <!-- Upload Button -->
+          <button onclick="document.getElementById('modalFileInput').click()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span>Tải Ảnh Căn Này</span>
+          </button>
+
+          <!-- Reset / Delete Uploaded Image Button -->
+          <button id="modalResetBtn" onclick="resetCurrentCustomImage()" class="hidden px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 text-rose-400 hover:text-rose-300 font-semibold text-xs transition border border-slate-700 hover:border-rose-500/40" title="Xoá ảnh đã tải, khôi phục ảnh mặc định">
+            Xoá ảnh đã tải
+          </button>
+
+          <!-- Close Button -->
+          <button onclick="closeLayoutModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition shadow-lg shadow-indigo-600/30">
+            Đóng lại
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Storage manager for user-uploaded custom images (Persisted in localStorage)
+    const STORAGE_KEY = 'ost_custom_apartment_images';
+    function getStoredCustomImages() {
+      try {
+        const item = localStorage.getItem(STORAGE_KEY);
+        return item ? JSON.parse(item) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setStoredCustomImages(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("Storage full or error:", e);
+        showToast("⚠️ Dung lượng lưu trữ đầy, vui lòng xoá bớt ảnh cũ!", "warning");
+      }
+    }
+
+    // Helper: compress image client-side before saving to localStorage (Max 1400px, 0.85 quality WebP/JPEG)
+    function compressImageFile(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const maxDim = 1400;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/webp', 0.85);
+          callback(dataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Toast Notification helper
+    function showToast(message, type = "success") {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMsg');
+      const icon = document.getElementById('toastIcon');
+      msg.textContent = message;
+      icon.textContent = type === 'success' ? '✅' : '⚠️';
+      
+      toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-20px]', 'opacity-0');
+      }, 2500);
+    }
+
+    // Data definition for Tower 1 (20 items, 68 units)
+    const dataT1 = [
+      { stt: 1, code: "T1-1BRC-1", type: "1PN", area: "46,79", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Góc nhỏ)" },
+      { stt: 2, code: "T1-2BRS-8", type: "2PN", area: "59,99", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Tiêu chuẩn)" },
+      { stt: 3, code: "T1-2BRS-1", type: "2PN", area: "61,18", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Tiêu chuẩn)" },
+      { stt: 4, code: "T1-2BRS-5", type: "2PN", area: "64,38", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Tiêu chuẩn)" },
+      { stt: 5, code: "T1-2BRS-3", type: "2PN", area: "66,33", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Tiêu chuẩn)" },
+      { stt: 6, code: "T1-2BRS-6", type: "2PN", area: "67,57", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Tiêu chuẩn)" },
+      { stt: 7, code: "T1-2BRC-2", type: "2PN", area: "76,99", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Góc)" },
+      { stt: 8, code: "T1-2BRC-4", type: "2PN", area: "77,53", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Góc)" },
+      { stt: 9, code: "T1-2BRC-7", type: "2PN", area: "78,50", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Góc)" },
+      { stt: 10, code: "T1-2BRC-7", type: "2PN", area: "78,71", floor: "Tầng 7", count: 1, note: "Căn góc tầng áp mái (lệch +0,21 m²)" },
+      { stt: 11, code: "T1-2BRL-9", type: "2PN", area: "90,21", floor: "Tầng 7", count: 1, note: "Căn 2PN lớn tầng áp mái" },
+      { stt: 12, code: "T1-3BRS-3", type: "3PN", area: "90,44", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Tiêu chuẩn)" },
+      { stt: 13, code: "T1-3BRC-2", type: "3PN", area: "92,68", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Góc)" },
+      { stt: 14, code: "T1-3BRC-5", type: "3PN", area: "93,31", floor: "Tầng 7", count: 1, note: "Căn 3PN góc tầng áp mái" },
+      { stt: 15, code: "T1-3BRC-1", type: "3PN", area: "94,37", floor: "Tầng 2–6", count: 5, note: "Căn hộ điển hình (Góc)" },
+      { stt: 16, code: "T1-3BRC-4", type: "3PN", area: "99,65", floor: "Tầng 7", count: 1, note: "Căn 3PN góc tầng áp mái" },
+      { stt: 17, code: "T1-4BRC-3", type: "4PN", area: "120,01", floor: "Tầng 7", count: 1, note: "Căn 4PN góc tầng áp mái" },
+      { stt: 18, code: "T1-4BRS-2", type: "4PN", area: "120,04", floor: "Tầng 7", count: 1, note: "Căn 4PN tiêu chuẩn tầng áp mái" },
+      { stt: 19, code: "T1-4BRC-1", type: "4PN", area: "124,47", floor: "Tầng 7", count: 1, note: "Căn 4PN góc tầng áp mái" },
+      { stt: 20, code: "T1-PH", type: "Penthouse", area: "159,24", floor: "Tầng 7", count: 1, note: "Căn hộ Penthouse áp mái" }
+    ];
+
+    // Data definition for Tower 2 (20 items, 68 units)
+    const dataT2 = [
+      { stt: 1, code: "T2-2BRS-1B", type: "2PN", area: "55,34", floor: "Tầng 7–8", count: 2, note: "Căn biến thể giật cấp (Layout B)" },
+      { stt: 2, code: "T2-2BRS-1C", type: "2PN", area: "57,47", floor: "Tầng 6", count: 1, note: "Căn biến thể giật cấp (Layout C)" },
+      { stt: 3, code: "T2-2BRS-1A", type: "2PN", area: "57,55", floor: "Tầng 2–5", count: 4, note: "Căn hộ điển hình tiêu chuẩn (Layout A)" },
+      { stt: 4, code: "T2-2BRS-5", type: "2PN", area: "67,20", floor: "Tầng 2–8", count: 7, note: "Căn hộ điển hình cốt lõi (xuyên suốt T2–8)" },
+      { stt: 5, code: "T2-2BRC-2B", type: "2PN", area: "73,57", floor: "Tầng 7–8", count: 2, note: "Căn biến thể giật cấp (Layout B)" },
+      { stt: 6, code: "T2-2BRS-3", type: "2PN", area: "74,79", floor: "Tầng 2–8", count: 7, note: "Căn hộ điển hình cốt lõi (xuyên suốt T2–8)" },
+      { stt: 7, code: "T2-2BRL-6B", type: "2PN", area: "76,96", floor: "Tầng 7–8", count: 2, note: "Căn biến thể giật cấp (Layout B)" },
+      { stt: 8, code: "T2-2BRC-4", type: "2PN", area: "78,50", floor: "Tầng 2–8", count: 7, note: "Căn hộ điển hình cốt lõi (Góc, T2–8)" },
+      { stt: 9, code: "T2-2BRC-2C", type: "2PN", area: "81,88", floor: "Tầng 6", count: 1, note: "Căn biến thể giật cấp (Layout C)" },
+      { stt: 10, code: "T2-2BRC-2A", type: "2PN", area: "82,06", floor: "Tầng 2–5", count: 4, note: "Căn hộ điển hình (Góc, Layout A)" },
+      { stt: 11, code: "T2-2BRL-6C", type: "2PN", area: "87,29", floor: "Tầng 6", count: 1, note: "Căn biến thể giật cấp (Layout C)" },
+      { stt: 12, code: "T2-2BRL-6A", type: "2PN", area: "89,64", floor: "Tầng 2–5", count: 4, note: "Căn hộ điển hình (Lớn, Layout A)" },
+      { stt: 13, code: "T2-3BRC-1", type: "3PN", area: "90,11", floor: "Tầng 2–8", count: 7, note: "Căn hộ điển hình cốt lõi (Góc, T2–8)" },
+      { stt: 14, code: "T2-3BRC-3", type: "3PN", area: "98,38", floor: "Tầng 2–8", count: 7, note: "Căn hộ điển hình cốt lõi (Góc, T2–8)" },
+      { stt: 15, code: "T2-3BRC-4", type: "3PN", area: "100,14", floor: "Tầng 9", count: 1, note: "Căn 3PN góc tầng áp mái" },
+      { stt: 16, code: "T2-3BRL-2", type: "3PN", area: "106,39", floor: "Tầng 2–8", count: 7, note: "Căn hộ điển hình cốt lõi (Lớn, T2–8)" },
+      { stt: 17, code: "T2-4BRC-2", type: "4PN", area: "145,61", floor: "Tầng 9", count: 1, note: "Căn 4PN góc tầng áp mái" },
+      { stt: 18, code: "T2-4BRS-3", type: "4PN", area: "146,50", floor: "Tầng 9", count: 1, note: "Căn 4PN tiêu chuẩn tầng áp mái" },
+      { stt: 19, code: "T2-4BRC-1", type: "4PN", area: "157,65", floor: "Tầng 9", count: 1, note: "Căn 4PN góc tầng áp mái" },
+      { stt: 20, code: "T2-PH", type: "Penthouse", area: "198,25", floor: "Tầng 9", count: 1, note: "Căn hộ Penthouse áp mái" }
+    ];
+
+    // Data definition for Tower 3 (11 items, 49 units)
+    const dataT3 = [
+      { stt: 1, code: "T3-2BRC-1", type: "2PN", area: "88,75", floor: "Tầng 2–10", count: 9, note: "Căn hộ điển hình đơn tầng (Góc)" },
+      { stt: 2, code: "T3-3BRC-2", type: "3PN", area: "101,80", floor: "Tầng 2–10", count: 9, note: "Căn hộ điển hình đơn tầng (Góc)" },
+      { stt: 3, code: "T3-3BRC-1", type: "3PN", area: "106,43", floor: "Tầng 2–10", count: 9, note: "Căn hộ điển hình đơn tầng (Góc)" },
+      { stt: 4, code: "T3-3BRC-1", type: "3PN", area: "106,93", floor: "Tầng 11", count: 1, note: "Căn 3PN góc tầng trên cùng (lệch +0,5 m²)" },
+      { stt: 5, code: "T3-4BRC-1", type: "4PN", area: "147,63", floor: "Tầng 2–10", count: 9, note: "Căn hộ điển hình đơn tầng (Góc lớn)" },
+      { stt: 6, code: "T3-4BRC-1", type: "4PN", area: "149,42", floor: "Tầng 11", count: 1, note: "Căn 4PN góc tầng trên cùng (lệch +1,79 m²)" },
+      { stt: 7, code: "T3-DUP-1", type: "Duplex", area: "215,54", floor: "Tầng 2–3, 4–5, 6–7, 8–9", count: 4, note: "Duplex điển hình (Sàn dưới 117,5m² + Sàn trên 98,1m²)" },
+      { stt: 8, code: "T3-DUP-1", type: "Duplex", area: "216,23", floor: "Tầng 10–11", count: 1, note: "Duplex áp mái (Sàn dưới 117,5m² + Sàn trên T11 98,8m²)" },
+      { stt: 9, code: "T3-DUP-2", type: "Duplex", area: "231,54", floor: "Tầng 2–3, 4–5, 6–7, 8–9", count: 4, note: "Duplex điển hình (Sàn dưới 126,0m² + Sàn trên 105,6m²)" },
+      { stt: 10, code: "T3-DUP-2", type: "Duplex", area: "231,00", floor: "Tầng 10–11", count: 1, note: "Duplex áp mái (Sàn dưới 126,0m² + Sàn trên T11 105,0m²)" },
+      { stt: 11, code: "T3-PH", type: "Penthouse", area: "201,19", floor: "Tầng 11", count: 1, note: "Căn hộ Penthouse áp mái" }
+    ];
+
+    // Blueprint vector layout generator as clean SVG string
+    function generateApartmentSVG(code, type, area, isEnlarged = false) {
+      const w = isEnlarged ? 760 : 380;
+      const h = isEnlarged ? 450 : 210;
+      
+      let themeColor = "#6366f1";
+      let badgeText = "2 PHÒNG NGỦ";
+      let rooms = [];
+
+      if (type === "1PN") {
+        themeColor = "#3b82f6";
+        badgeText = "1 PHÒNG NGỦ COMPACT";
+        rooms = [
+          { name: "PHÒNG KHÁCH & ĂN", x: 20, y: 30, w: 180, h: 140, color: "#1e293b", label: "21.5 m²" },
+          { name: "PHÒNG NGỦ MASTER", x: 210, y: 30, w: 150, h: 100, color: "#1e293b", label: "14.2 m²" },
+          { name: "BẾP", x: 20, y: 175, w: 110, h: 45, color: "#0f172a", label: "5.8 m²" },
+          { name: "WC", x: 210, y: 135, w: 80, h: 85, color: "#0f172a", label: "4.2 m²" },
+          { name: "LOGIA", x: 295, y: 135, w: 65, h: 85, color: "#1e1b4b", label: "Ban công" }
+        ];
+      } else if (type === "2PN") {
+        themeColor = "#6366f1";
+        badgeText = "2 PHÒNG NGỦ TIÊU CHUẨN";
+        rooms = [
+          { name: "PHÒNG KHÁCH", x: 20, y: 30, w: 160, h: 110, color: "#1e293b", label: "24.6 m²" },
+          { name: "BAN CÔNG", x: 20, y: 145, w: 160, h: 40, color: "#1e1b4b", label: "View Thoáng" },
+          { name: "BẾP & ĂN", x: 185, y: 30, w: 110, h: 80, color: "#0f172a", label: "10.5 m²" },
+          { name: "WC 1", x: 185, y: 115, w: 55, h: 70, color: "#0f172a", label: "4.0 m²" },
+          { name: "WC 2", x: 242, y: 115, w: 53, h: 70, color: "#0f172a", label: "3.8 m²" },
+          { name: "PN MASTER", x: 300, y: 30, w: 120, h: 100, color: "#1e293b", label: "16.8 m²" },
+          { name: "PN PHỤ", x: 300, y: 135, w: 120, h: 75, color: "#1e293b", label: "12.0 m²" }
+        ];
+      } else if (type === "3PN") {
+        themeColor = "#06b6d4";
+        badgeText = "3 PHÒNG NGỦ GÓC (LARGE)";
+        rooms = [
+          { name: "PHÒNG KHÁCH & ĂN", x: 20, y: 30, w: 190, h: 110, color: "#1e293b", label: "32.0 m²" },
+          { name: "BAN CÔNG CHÍNH", x: 20, y: 145, w: 190, h: 40, color: "#1e1b4b", label: "Logia Panorama" },
+          { name: "BẾP ĐẢO", x: 215, y: 30, w: 90, h: 80, color: "#0f172a", label: "12.5 m²" },
+          { name: "WC CHUNG", x: 215, y: 115, w: 90, h: 70, color: "#0f172a", label: "5.0 m²" },
+          { name: "PN MASTER + WC", x: 310, y: 30, w: 125, h: 100, color: "#1e293b", label: "21.0 m²" },
+          { name: "PN 2", x: 310, y: 135, w: 60, h: 75, color: "#1e293b", label: "13.5 m²" },
+          { name: "PN 3", x: 375, y: 135, w: 60, h: 75, color: "#1e293b", label: "12.5 m²" }
+        ];
+      } else if (type === "4PN") {
+        themeColor = "#f59e0b";
+        badgeText = "4 PHÒNG NGỦ LUXURY";
+        rooms = [
+          { name: "PHÒNG KHÁCH ĐẠI GIA ĐÌNH", x: 20, y: 30, w: 220, h: 110, color: "#1e293b", label: "42.5 m²" },
+          { name: "BAN CÔNG LỚN", x: 20, y: 145, w: 220, h: 40, color: "#1e1b4b", label: "Ban công góc 180°" },
+          { name: "BẾP & KHO", x: 245, y: 30, w: 90, h: 75, color: "#0f172a", label: "15.0 m²" },
+          { name: "2 WC CHUNG", x: 245, y: 110, w: 90, h: 75, color: "#0f172a", label: "9.5 m²" },
+          { name: "PN MASTER SUITE", x: 340, y: 30, w: 120, h: 90, color: "#1e293b", label: "26.0 m²" },
+          { name: "PN 2", x: 340, y: 125, w: 60, h: 80, color: "#1e293b", label: "14.0 m²" },
+          { name: "PN 3 & 4", x: 405, y: 125, w: 55, h: 80, color: "#1e293b", label: "26.0 m²" }
+        ];
+      } else if (type === "Duplex") {
+        themeColor = "#10b981";
+        badgeText = "DUPLEX THÔNG 2 TẦNG (T3)";
+        rooms = [
+          { name: "TẦNG DƯỚI: KHÁCH + BẾP + SÂN", x: 20, y: 30, w: 215, h: 155, color: "#1e293b", label: "Sàn Dưới: ~120m²" },
+          { name: "THÔNG TẦNG (VOID SKY)", x: 240, y: 30, w: 80, h: 155, color: "#064e3b", label: "Cao 6.0m" },
+          { name: "TẦNG TRÊN: 3PN SUITE + SINH HOẠT", x: 325, y: 30, w: 135, h: 155, color: "#1e293b", label: "Sàn Trên: ~105m²" }
+        ];
+      } else if (type === "Penthouse") {
+        themeColor = "#f43f5e";
+        badgeText = "PENTHOUSE ÁP MÁI TOÀ THÁP";
+        rooms = [
+          { name: "GRAND LIVING & SKY DINING", x: 20, y: 30, w: 230, h: 120, color: "#1e293b", label: "65.0 m²" },
+          { name: "SÂN VƯỜN ÁP MÁI", x: 20, y: 155, w: 230, h: 45, color: "#881337", label: "Sky Garden Private" },
+          { name: "PRESIDENTIAL MASTER SUITE", x: 255, y: 30, w: 130, h: 110, color: "#1e293b", label: "38.5 m²" },
+          { name: "JACUZZI + GUEST SUITES", x: 255, y: 145, w: 130, h: 55, color: "#0f172a", label: "Spa & Bed 2-3" }
+        ];
+      }
+
+      const scale = isEnlarged ? 1.58 : 0.88;
+      
+      let svgRooms = rooms.map(r => `
+        <g>
+          <rect x="${r.x * scale}" y="${r.y * scale}" width="${r.w * scale}" height="${r.h * scale}" rx="6" fill="${r.color}" stroke="${themeColor}" stroke-width="1.2" stroke-opacity="0.4" />
+          <text x="${(r.x + r.w/2) * scale}" y="${(r.y + r.h/2 - 4) * scale}" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="${isEnlarged ? 11 : 9}" fill="#f8fafc">${r.name}</text>
+          <text x="${(r.x + r.w/2) * scale}" y="${(r.y + r.h/2 + (isEnlarged ? 13 : 9)) * scale}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="600" font-size="${isEnlarged ? 10 : 7.5}" fill="${themeColor}">${r.label}</text>
+        </g>
+      `).join('');
+
+      return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid_${code}_${isEnlarged ? 1 : 0}" width="16" height="16" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#334155" stroke-width="0.5" stroke-opacity="0.3"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="#030712" />
+        <rect width="100%" height="100%" fill="url(#grid_${code}_${isEnlarged ? 1 : 0})" />
+        <rect x="${10 * scale}" y="${15 * scale}" width="${(w - 20) / (isEnlarged ? 1 : 1)}" height="${(h - 25) / (isEnlarged ? 1 : 1)}" rx="10" fill="none" stroke="${themeColor}" stroke-width="2.5" stroke-opacity="0.75" stroke-dasharray="8 4" />
+        ${svgRooms}
+        <g transform="translate(14, ${h - (isEnlarged ? 24 : 14)})">
+          <rect width="${isEnlarged ? 260 : 180}" height="${isEnlarged ? 20 : 14}" rx="4" fill="#0f172a" fill-opacity="0.9" stroke="${themeColor}" stroke-width="0.8" />
+          <text x="${isEnlarged ? 130 : 90}" y="${isEnlarged ? 14 : 10}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="${isEnlarged ? 10 : 8}" font-weight="700" fill="${themeColor}">
+            📐 ${code} • ${area} m² • ${badgeText}
+          </text>
+        </g>
+      </svg>`;
+    }
+
+    // Resolves image URL:
+    // 1. User uploaded custom image (localStorage)
+    // 2. Extracted base64 WebP image from TKCS
+    // 3. Crisp Vector Blueprint SVG
+    function getApartmentImageSrc(code, type, area, isEnlarged = false) {
+      const customImages = getStoredCustomImages();
+      if (customImages && customImages[code]) {
+        return customImages[code];
+      }
+      if (typeof rawApartmentImages !== 'undefined' && rawApartmentImages[code]) {
+        return rawApartmentImages[code];
+      }
+      return `Anh Can Ho/${code}.jpg`;
+    }
+
+    function renderTable(tableId, data, filterType = "all") {
+      const tbody = document.getElementById(tableId);
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const customImages = getStoredCustomImages();
+
+      const filtered = data.filter(item => {
+        if (filterType === "all") return true;
+        if (filterType === "4PN") return item.type === "4PN" || item.type === "Penthouse";
+        return item.type === filterType;
+      });
+
+      filtered.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-indigo-950/40 cursor-pointer transition-colors border-b border-slate-700/30 group";
+        tr.setAttribute("data-code", row.code);
+        tr.setAttribute("data-floor", row.floor);
+        tr.setAttribute("data-area", row.area);
+        tr.setAttribute("data-type", row.type);
+        tr.setAttribute("data-note", row.note);
+        
+        tr.onmouseenter = function(e) { handleRowHover(e, this); };
+        tr.onmousemove = function(e) { updateHoverCardPosition(e); };
+        tr.onmouseleave = function() { handleRowLeave(); };
+        tr.onclick = function() { openLayoutModal(this); };
+        
+        let typeBadge = "bg-slate-700 text-slate-300";
+        if (row.type === "1PN") typeBadge = "bg-blue-500/20 text-blue-300 border border-blue-500/30";
+        if (row.type === "2PN") typeBadge = "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+        if (row.type === "3PN") typeBadge = "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30";
+        if (row.type === "4PN") typeBadge = "bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        if (row.type === "Duplex") typeBadge = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold";
+        if (row.type === "Penthouse") typeBadge = "bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold";
+
+        const hasCustomImg = customImages && customImages[row.code];
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-center text-slate-400 font-mono">${row.stt}</td>
+          <td class="py-2.5 px-3 font-bold text-white font-mono">
+            <span class="inline-flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
+              ${row.code}
+              ${hasCustomImg ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Đã có ảnh tải lên riêng"></span>' : ''}
+              <span class="inline-flex items-center justify-center w-4 h-4 rounded bg-slate-700/60 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all text-[10px]" title="Di chuột để xem trước hoặc nhấp để phóng to / tải ảnh">
+                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </span>
+            </span>
+          </td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold ${typeBadge}">${row.type}</span></td>
+          <td class="py-2.5 px-3 text-right font-bold text-emerald-400 font-mono">${row.area}</td>
+          <td class="py-2.5 px-3 font-semibold text-indigo-300">${row.floor}</td>
+          <td class="py-2.5 px-3 text-center font-bold text-white bg-slate-800/40">${row.count}</td>
+          <td class="py-2.5 px-3 text-slate-300">${row.note}</td>
+          <td class="py-2.5 px-3 text-center" onclick="event.stopPropagation()">
+            <button onclick="triggerRowUpload('${row.code}')" class="px-2 py-1 rounded-lg ${hasCustomImg ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 hover:bg-indigo-600 text-slate-400 hover:text-white'} text-[11px] font-semibold transition flex items-center justify-center gap-1 mx-auto" title="Tải ảnh mặt bằng riêng cho căn ${row.code}">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span class="hidden sm:inline">${hasCustomImg ? 'Đổi ảnh' : 'Tải ảnh'}</span>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterTable(tower, type) {
+      if (tower === 't1') {
+        renderTable("tbody-t1", dataT1, type);
+        document.querySelectorAll('.filter-btn-t1').forEach(btn => {
+          if (btn.dataset.filter === type) {
+            btn.className = "filter-btn-t1 px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium";
+          } else {
+            btn.className = "filter-btn-t1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white";
+          }
+        });
+      } else if (tower === 't2') {
+        renderTable("tbody-t2", dataT2, type);
+        document.querySelectorAll('.filter-btn-t2').forEach(btn => {
+          if (btn.dataset.filter === type) {
+            btn.className = "filter-btn-t2 px-2.5 py-1 rounded-lg bg-cyan-600 text-white font-medium";
+          } else {
+            btn.className = "filter-btn-t2 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white";
+          }
+        });
+      } else if (tower === 't3') {
+        renderTable("tbody-t3", dataT3, type);
+        document.querySelectorAll('.filter-btn-t3').forEach(btn => {
+          if (btn.dataset.filter === type) {
+            btn.className = "filter-btn-t3 px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-medium";
+          } else {
+            btn.className = "filter-btn-t3 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white";
+          }
+        });
+      }
+    }
+
+    // Refresh current active tables after image upload/delete
+    function refreshCurrentTables() {
+      renderTable("tbody-t1", dataT1);
+      renderTable("tbody-t2", dataT2);
+      renderTable("tbody-t3", dataT3);
+    }
+
+    // Hover preview card logic with zero-flicker & precise viewport clamping
+    const hoverCard = document.getElementById('hoverPreviewCard');
+    let hoverLeaveTimer = null;
+
+    function handleRowHover(e, rowEl) {
+      if (!hoverCard) return;
+      clearTimeout(hoverLeaveTimer);
+
+      const code = rowEl.getAttribute('data-code');
+      const floor = rowEl.getAttribute('data-floor');
+      const area = rowEl.getAttribute('data-area');
+      const type = rowEl.getAttribute('data-type');
+
+      document.getElementById('previewCode').textContent = code;
+      document.getElementById('previewFloor').textContent = floor;
+      document.getElementById('previewArea').textContent = area + ' m²';
+
+      const customImages = getStoredCustomImages();
+      const customBadge = document.getElementById('previewCustomBadge');
+      if (customImages && customImages[code]) {
+        customBadge.classList.remove('hidden');
+      } else {
+        customBadge.classList.add('hidden');
+      }
+
+      const badge = document.getElementById('previewTypeBadge');
+      badge.textContent = type;
+      badge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full " + 
+        (type === '1PN' ? 'bg-blue-500/20 text-blue-300' :
+         type === '2PN' ? 'bg-indigo-500/20 text-indigo-300' :
+         type === '3PN' ? 'bg-cyan-500/20 text-cyan-300' :
+         type === '4PN' ? 'bg-amber-500/20 text-amber-300' :
+         type === 'Duplex' ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'bg-rose-500/20 text-rose-300 font-bold');
+
+      const imgSrc = getApartmentImageSrc(code, type, area, false);
+      const previewImg = document.getElementById('previewImg');
+      previewImg.src = imgSrc;
+
+      hoverCard.classList.remove('hidden');
+      updateHoverCardPosition(e);
+      
+      requestAnimationFrame(() => {
+        hoverCard.classList.remove('opacity-0');
+      });
+    }
+
+    function updateHoverCardPosition(e) {
+      if (!hoverCard) return;
+      const cardW = 400;
+      const cardH = 320;
+      
+      let left = e.clientX + 24;
+      let top = e.clientY - 110;
+
+      // Flip left if overflowing viewport on the right
+      if (left + cardW > window.innerWidth - 16) {
+        left = e.clientX - cardW - 24;
+      }
+      if (left < 16) left = 16;
+
+      // Keep vertically within screen boundaries
+      if (top < 16) top = 16;
+      if (top + cardH > window.innerHeight - 16) {
+        top = window.innerHeight - cardH - 16;
+      }
+
+      hoverCard.style.left = left + 'px';
+      hoverCard.style.top = top + 'px';
+    }
+
+    function handleRowLeave() {
+      if (!hoverCard) return;
+      hoverCard.classList.add('opacity-0');
+      clearTimeout(hoverLeaveTimer);
+      hoverLeaveTimer = setTimeout(() => {
+        if (hoverCard.classList.contains('opacity-0')) {
+          hoverCard.classList.add('hidden');
+        }
+      }, 100);
+    }
+
+    // Modal Lightbox logic & Upload state
+    const modal = document.getElementById('layoutModal');
+    const modalBox = document.getElementById('modalBox');
+    let currentModalApartmentCode = "";
+    let currentModalApartmentType = "";
+    let currentModalApartmentArea = "";
+
+    function openLayoutModal(rowEl) {
+      handleRowLeave();
+      const code = rowEl.getAttribute('data-code');
+      const floor = rowEl.getAttribute('data-floor');
+      const area = rowEl.getAttribute('data-area');
+      const type = rowEl.getAttribute('data-type');
+      const note = rowEl.getAttribute('data-note');
+
+      currentModalApartmentCode = code;
+      currentModalApartmentType = type;
+      currentModalApartmentArea = area;
+
+      document.getElementById('modalCode').textContent = `${code} (${area} m²)`;
+      document.getElementById('modalSub').textContent = `Loại căn: ${type} • Vị trí: ${floor} • Hồ sơ thiết kế cơ sở OST`;
+      document.getElementById('modalNote').textContent = `📌 Ghi chú: ${note} | Diện tích thông thuỷ thực tế`;
+
+      const customImages = getStoredCustomImages();
+      const hasCustom = customImages && customImages[code];
+      const resetBtn = document.getElementById('modalResetBtn');
+      if (hasCustom) {
+        resetBtn.classList.remove('hidden');
+      } else {
+        resetBtn.classList.add('hidden');
+      }
+
+      const modalImg = document.getElementById('modalImg');
+      modalImg.src = getApartmentImageSrc(code, type, area, true);
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalBox.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeLayoutModal() {
+      modal.classList.add('opacity-0');
+      modalBox.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+    function handleModalBackdropClick(e) {
+      if (e.target === modal) closeLayoutModal();
+    }
+
+    // Image Upload Handlers
+    function handleModalFileSelected(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file || !currentModalApartmentCode) return;
+      saveImageFileForCode(currentModalApartmentCode, file);
+      e.target.value = '';
+    }
+
+    let activeRowUploadCode = "";
+    function triggerRowUpload(code) {
+      activeRowUploadCode = code;
+      document.getElementById('rowFileInput').click();
+    }
+
+    function handleRowFileSelected(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file || !activeRowUploadCode) return;
+      saveImageFileForCode(activeRowUploadCode, file);
+      e.target.value = '';
+    }
+
+    function saveImageFileForCode(code, file) {
+      if (!file.type.startsWith('image/')) {
+        showToast("Vui lòng chọn file hình ảnh (PNG, JPG, WebP, SVG)!", "warning");
+        return;
+      }
+
+      showToast(`Đang xử lý ảnh cho căn ${code}...`);
+      compressImageFile(file, function(compressedDataUrl) {
+        const custom = getStoredCustomImages();
+        custom[code] = compressedDataUrl;
+        setStoredCustomImages(custom);
+
+        // Update modal image if open
+        if (currentModalApartmentCode === code) {
+          document.getElementById('modalImg').src = compressedDataUrl;
+          document.getElementById('modalResetBtn').classList.remove('hidden');
+        }
+
+        refreshCurrentTables();
+        showToast(`✅ Đã lưu ảnh thành công cho căn ${code}!`);
+      });
+    }
+
+    function resetCurrentCustomImage() {
+      if (!currentModalApartmentCode) return;
+      const custom = getStoredCustomImages();
+      delete custom[currentModalApartmentCode];
+      setStoredCustomImages(custom);
+
+      document.getElementById('modalResetBtn').classList.add('hidden');
+      document.getElementById('modalImg').src = getApartmentImageSrc(currentModalApartmentCode, currentModalApartmentType, currentModalApartmentArea, true);
+
+      refreshCurrentTables();
+      showToast(`Đã khôi phục ảnh mặc định cho ${currentModalApartmentCode}`);
+    }
+
+    // Drag & Drop handlers on Modal Drop Zone
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('dropOverlay').classList.remove('hidden');
+    }
+    function handleDragLeave(e) {
+      document.getElementById('dropOverlay').classList.add('hidden');
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropOverlay').classList.add('hidden');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && currentModalApartmentCode) {
+        saveImageFileForCode(currentModalApartmentCode, e.dataTransfer.files[0]);
+      }
+    }
+
+    // Slide navigation
+    let currentSlide = 0;
+    const totalSlides = 5;
+
+    function goToSlide(index) {
+      if (index < 0 || index >= totalSlides) return;
+      currentSlide = index;
+
+      document.querySelectorAll('.slide-panel').forEach((el, i) => {
+        if (i === currentSlide) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        if (i === currentSlide) {
+          btn.className = "tab-btn px-3 py-1.5 rounded-lg transition-all bg-indigo-600 text-white shadow-sm whitespace-nowrap";
+        } else {
+          btn.className = "tab-btn px-3 py-1.5 rounded-lg transition-all text-slate-300 hover:text-white whitespace-nowrap";
+        }
+      });
+
+      document.getElementById('slideIndicator').textContent = `Trang ${currentSlide + 1} / ${totalSlides}`;
+      document.getElementById('prevBtn').disabled = (currentSlide === 0);
+      document.getElementById('nextBtn').disabled = (currentSlide === totalSlides - 1);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) goToSlide(currentSlide - 1);
+    }
+
+    // Global Search across towers
+    function handleGlobalSearch(query) {
+      const q = query.trim().toUpperCase();
+      if (!q) {
+        renderTable("tbody-t1", dataT1);
+        renderTable("tbody-t2", dataT2);
+        renderTable("tbody-t3", dataT3);
+        return;
+      }
+
+      if (currentSlide === 0 || currentSlide === 4) {
+        goToSlide(1);
+      }
+
+      const match = item => item.code.toUpperCase().includes(q) || item.type.toUpperCase().includes(q) || item.floor.toUpperCase().includes(q) || item.area.includes(q);
+      
+      renderTable("tbody-t1", dataT1.filter(match));
+      renderTable("tbody-t2", dataT2.filter(match));
+      renderTable("tbody-t3", dataT3.filter(match));
+    }
+
+    // Export Data CSV
+    function exportDataToCSV() {
+      let csvContent = "\uFEFFToa,STT,Ma Can,Loai Can,Dien Tich (m2),Tang,So Can,Ghi Chu\n";
+      
+      dataT1.forEach(r => {
+        csvContent += `Tháp 1,${r.stt},"${r.code}","${r.type}",${r.area},"${r.floor}",${r.count},"${r.note}"\n`;
+      });
+      dataT2.forEach(r => {
+        csvContent += `Tháp 2,${r.stt},"${r.code}","${r.type}",${r.area},"${r.floor}",${r.count},"${r.note}"\n`;
+      });
+      dataT3.forEach(r => {
+        csvContent += `Tháp 3,${r.stt},"${r.code}","${r.type}",${r.area},"${r.floor}",${r.count},"${r.note}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "Bao_Cao_Can_Ho_Du_An_OST_185Can.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLayoutModal();
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+
+    // Initialize Chart & Tables on load
+    window.onload = function() {
+      renderTable("tbody-t1", dataT1);
+      renderTable("tbody-t2", dataT2);
+      renderTable("tbody-t3", dataT3);
+      goToSlide(0);
+
+      // Render Overview Doughnut Chart
+      const ctx = document.getElementById('overviewChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['1PN (5 căn)', '2PN (93 căn)', '3PN (58 căn)', '4PN (16 căn)', 'Duplex (10 căn)', 'Penthouse (3 căn)'],
+            datasets: [{
+              data: [5, 93, 58, 16, 10, 3],
+              backgroundColor: [
+                '#3b82f6', // 1PN: Blue
+                '#6366f1', // 2PN: Indigo
+                '#06b6d4', // 3PN: Cyan
+                '#f59e0b', // 4PN: Amber
+                '#10b981', // Duplex: Emerald
+                '#f43f5e'  // Penthouse: Rose
+              ],
+              borderWidth: 2,
+              borderColor: '#1e293b'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  color: '#cbd5e1',
+                  font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 },
+                  boxWidth: 12,
+                  padding: 10
+                }
+              }
+            },
+            cutout: '65%'
+          }
+        });
+      }
+    };
+  </script>
+</body>
+</html>
